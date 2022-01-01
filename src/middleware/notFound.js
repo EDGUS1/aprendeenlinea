@@ -5,6 +5,6 @@ module.exports = (req, res) => {
     //Definicion del error
     error: 'not found',
     //Definicion del path
-    path: req.path
-  })
-}
+    path: req.path,
+  });
+};

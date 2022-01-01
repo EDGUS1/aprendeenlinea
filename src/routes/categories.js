@@ -1,35 +1,37 @@
 //Framework de nodejs
-const express = require('express')
+const express = require('express');
 //Definicion del router
-const router = express.Router()
+const router = express.Router();
 //Definicion del pool sql
-const pool = require('../src/database');
+const pool = require('./../database');
 //Nos trae el metodo para hacer querys a la BD
 
 //Definicion de la ruta
 router.get('/categories', async (req, res, next) => {
   // Ruta para listar las categorias
   // Aqui va el query para listar las categorias
-  const categories = await pool.query('SELECT * FROM heroku_b3e0382f6ba83ba.categoria');
+  const categories = await pool.query('SELECT * FROM categoria');
 
   //Respuesta a la peticion
   res.status(200).json({
-    categories
-  })
-})
+    categories,
+  });
+});
 
 router.get('/categories/:cat_id', async (req, res, next) => {
   // Ruta para listar las categorias
 
-  const { cat_id } = req.params
+  const { cat_id } = req.params;
   // Aqui va el query para listar las categorias
-  const categories = await pool.query('SELECT * FROM heroku_b3e0382f6ba83ba.categoria WHERE categoria_id = ?', [cat_id]);
+  const categories = await pool.query(
+    'SELECT * FROM categoria WHERE categoria_id = ?',
+    [cat_id]
+  );
 
   //Respuesta a la peticion
   res.status(200).json({
-    categories
-  })
-
-})
+    categories,
+  });
+});
 //exportacion del router
-module.exports = router
+module.exports = router;

@@ -3,3 +3,5 @@ node_modules
 .scannerwork
 coverage
 sonar-project.properties
+
+/utils
