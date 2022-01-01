@@ -6,7 +6,7 @@
   "scripts": {
     "sonar": "cross-env PASSWORDSONAR=root81018 node sonar-project.js",
     "dev": "nodemon src/index.js",
-    "start": "cross-env NODE_ENV=production node index.js",
+    "start": "node src/index.js",
     "test": "cross-env NODE_ENV=test PORT=3002 jest --coverage --no-cache"
   },
   "keywords": [
