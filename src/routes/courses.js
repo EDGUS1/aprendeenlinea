@@ -82,13 +82,12 @@ router.post('/courses', async (req, res, next) => {
     curso_id,
     usuario_id,
     categoria_id,
-    codigo: code,
-    imagen,
+    curso_codigo: code,
+    curso_imagen: imagen,
     curso_nombre,
-    descripcion,
-    conoci_previo,
+    curso_descripcion: descripcion,
+    curso_conoci_prev: conoci_previo,
     privacidad_id,
-    curso_fecha_creacion,
   };
 
   // Aqui va el query para guardar un curso

@@ -24,9 +24,10 @@ router.post('/login', async (req, res) => {
 
   //Se realiza la petición para seleccionar todos campos del usuario a la BD
   //Se guarda los datos en la constante user
-  const user = await pool.query('SELECT * FROM usuario WHERE correo = ?', [
-    correo,
-  ]);
+  const user = await pool.query(
+    'SELECT * FROM usuario WHERE usuario_correo = ?',
+    [correo]
+  );
 
   //Se guarda el passord encriptado de la base de datos en la variable passwordHash
 

@@ -34,11 +34,9 @@ router.post('/suggestions', async (req, res, next) => {
     // Se crea a la variable newSugesstion con los parámetros recogidos
     const newSugesstion = {
       categoria_id,
-      sugerencia_nombre_curso,
-      sugerencia_puntuacion_curso,
-      numero_votos,
+      sugerencia_nombre: sugerencia_nombre_curso,
       sugerencia_estado,
-      descripcion,
+      sugerencia_descripcion: descripcion,
     };
     // Se accede a la BD y se inserta o guarda newSuggestion en la BD
     await pool.query('INSERT INTO sugerencia SET ? ', [newSugesstion]);
@@ -91,7 +89,7 @@ router.put('/votarSugerencias', async (req, res, next) => {
   try {
     // Se accede a la BD para listar todos los votos de un usario
     let votos_usuario = await pool.query(
-      'SELECT * FROM votos WHERE usuario_id = ?',
+      'SELECT * FROM voto WHERE usuario_id = ?',
       [usuario_id]
     );
 
@@ -143,7 +141,7 @@ router.get('/listarVotosUsuario/:idUsuario', async (req, res, next) => {
   const { idUsuario } = req.params;
 
   //cuando es correcto
-  let list = await pool.query('SELECT * FROM votos WHERE usuario_id = ?', [
+  let list = await pool.query('SELECT * FROM voto WHERE usuario_id = ?', [
     idUsuario,
   ]);
 

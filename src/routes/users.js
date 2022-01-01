@@ -55,7 +55,7 @@ router.get('/users/:id', async (req, res, next) => {
     let cantidadEstudiantes = await Promise.all(
       idcursos.map(async idcur => {
         return pool.query(
-          'SELECT COUNT(*) FROM cursos as c JOIN curso_usuario as cu ON c.curso_id = cu.curso_id WHERE c.privacidad_id IN (1,5) AND cu.curso_id = ? GROUP BY cu.curso_id;',
+          'SELECT COUNT(*) FROM curso as c JOIN curso_usuario as cu ON c.curso_id = cu.curso_id WHERE c.privacidad_id IN (1,5) AND cu.curso_id = ? GROUP BY cu.curso_id;',
           [idcur]
         );
       })
@@ -148,7 +148,7 @@ router.post('/register', async (req, res, next) => {
     usuario_apellido_paterno: usuario_apellidos,
     usuario_contrasenia,
     usuario_correo: correo,
-    usuario_imagen: url,
+    usuario_imagen: null,
   };
 
   //Empesamos con el try
