@@ -481,8 +481,11 @@ router.get('/coursespublicmax', async (req, res, next) => {
   // Ruta para obtener la lista de cursos publicos
   //Empesamos con el try
   // Query para obtener la lista de cursos publicos
-  let cursos = await pool.query(
+  /* let cursos = await pool.query(
     'SELECT c.* FROM curso as c JOIN curso_usuario as cu ON c.curso_id = cu.curso_id WHERE c.privacidad_id IN (1,5) GROUP BY c.curso_id ORDER BY COUNT(*) DESC LIMIT 4;'
+  ); */
+  let cursos = await pool.query(
+    'SELECT * FROM curso c GROUP BY c.curso_id ORDER BY COUNT(*) DESC LIMIT 4;'
   );
   // Respuesta a la peticion
   res.status(200).json({

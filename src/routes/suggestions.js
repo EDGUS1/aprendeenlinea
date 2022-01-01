@@ -23,20 +23,13 @@ router.get('/suggestions', async (req, res, next) => {
 router.post('/suggestions', async (req, res, next) => {
   try {
     // Parámetros necesarios para guardar las sugerencias
-    const {
-      categoria_id,
-      sugerencia_nombre_curso,
-      sugerencia_puntuacion_curso,
-      numero_votos,
-      sugerencia_estado,
-      descripcion,
-    } = req.body;
+    const { categoria_id, sugerencia_nombre, sugerencia_descripcion } =
+      req.body;
     // Se crea a la variable newSugesstion con los parámetros recogidos
     const newSugesstion = {
       categoria_id,
-      sugerencia_nombre: sugerencia_nombre_curso,
-      sugerencia_estado,
-      sugerencia_descripcion: descripcion,
+      sugerencia_nombre,
+      sugerencia_descripcion,
     };
     // Se accede a la BD y se inserta o guarda newSuggestion en la BD
     await pool.query('INSERT INTO sugerencia SET ? ', [newSugesstion]);

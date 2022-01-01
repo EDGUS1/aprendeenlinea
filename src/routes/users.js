@@ -88,17 +88,21 @@ router.post('/useredit/:id', upload.fields([]), async (req, res, next) => {
   //Parámetro id extraido de la ruta
   const { id } = req.params;
   //Parámetros extraidos del cuerpo  enviado por el frontend
-  const { usuario_nombre, usuario_apellidos, url, correo, descripcion } =
-    req.body;
+  const {
+    usuario_nombre,
+    usuario_apellido_paterno,
+    usuario_imagen,
+    usuario_descripcion,
+  } = req.body;
   //Constante newUser user donde se guardan los parámetros del cuerpo
   console.log(req.body);
 
   const newUser = {
     usuario_nombre,
-    usuario_apellidos,
-    correo,
-    url,
-    descripcion,
+    usuario_apellido_paterno,
+    usuario_imagen,
+    usuario_descripcion,
+    usuario_fecha_modificacion: new Date(Date.now()),
   };
 
   //Se accede a la BD y se realiza un update a traves de la variable newUser y el parametro id

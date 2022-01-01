@@ -20,13 +20,13 @@ router.get('/login', async (req, res) => {
 //Metudo post para logear al usuario
 router.post('/login', async (req, res) => {
   //Parámetros del login con el correo y el password.
-  const { correo, password } = req.body;
+  const { usuario_correo, usuario_contrasenia } = req.body;
 
   //Se realiza la petición para seleccionar todos campos del usuario a la BD
   //Se guarda los datos en la constante user
   const user = await pool.query(
     'SELECT * FROM usuario WHERE usuario_correo = ?',
-    [correo]
+    [usuario_correo]
   );
 
   //Se guarda el passord encriptado de la base de datos en la variable passwordHash
@@ -38,7 +38,7 @@ router.post('/login', async (req, res) => {
   const passwordCorrect =
     user[0] === undefined
       ? false
-      : await bcrypt.compare(password, passwordHash);
+      : await bcrypt.compare(usuario_contrasenia, passwordHash);
 
   //Si el usuario o password son incorrectos se notificará el error
   if (!(user && passwordCorrect)) {
