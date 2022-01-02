@@ -97,7 +97,7 @@ router.put('/votarSugerencias', async (req, res, next) => {
     //Si no se encuentra en la tabla
     if (typeof resultado == 'undefined') {
       //Se inserta
-      await pool.query('INSERT INTO votos SET ? ', votos_nuevo);
+      await pool.query('INSERT INTO voto SET ? ', votos_nuevo);
 
       // Respuesta a la peticion, se manda un mensaje
       //Respuesta a la peticion
@@ -109,7 +109,7 @@ router.put('/votarSugerencias', async (req, res, next) => {
     else {
       //Se Elimina
       await pool.query(
-        ' DELETE FROM votos WHERE usuario_id = ? AND sugerencia_id = ? ',
+        ' DELETE FROM voto WHERE usuario_id = ? AND sugerencia_id = ? ',
         [usuario_id, sugerencia_id]
       );
 

@@ -10,24 +10,14 @@ router.post('/creartarea', async (req, res, next) => {
   //Esta es la ruta para crear una nueva tarea
 
   //Obtenemos los datos de la nueva tarea del cuerpo de la peticion
-  const {
-    curso_id,
-    nombre,
-    descripcion,
-    tarea_fecha_creacion,
-    tarea_fecha_entrega,
-    imagen,
-    enlace,
-  } = req.body;
+  const { curso_id, tarea_nombre, tarea_descripcion, tarea_fecha_entrega } =
+    req.body;
   //Se crea un json para la nbuevas tarea
   const newTarea = {
     curso_id,
-    nombre,
-    descripcion,
-    tarea_fecha_creacion,
+    tarea_nombre,
+    tarea_descripcion,
     tarea_fecha_entrega,
-    imagen,
-    enlace,
   };
 
   //Empesamos con el try
@@ -35,10 +25,10 @@ router.post('/creartarea', async (req, res, next) => {
     //Aqui va el query para crear una nueva tarea
     const tareaCreated = await pool.query('INSERT INTO tarea set ? ', newTarea);
     //Se llama al procedimiento
-    await pool.query('CALL asignartareas(?, ?);', [
-      curso_id,
-      tareaCreated.insertId,
-    ]);
+    // await pool.query('CALL asignartareas(?, ?);', [
+    //   curso_id,
+    //   tareaCreated.insertId,
+    // ]);
     //Respuesta a la peticion
     res.status(200).json({
       msg: 'tarea creada',

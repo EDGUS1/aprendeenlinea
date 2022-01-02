@@ -68,25 +68,24 @@ router.post('/courses', async (req, res, next) => {
     curso_id,
     usuario_id,
     categoria_id,
-    imagen,
+    curso_imagen,
     curso_nombre,
-    descripcion,
-    conoci_previo,
+    curso_descripcion,
+    curso_conoci_prev,
     privacidad_id,
-    curso_fecha_creacion,
   } = req.body;
   //Creamos el codigo para generar
-  var code = generator.generateCodes(pattern, 1, {});
+  const code = generator.generateCodes(pattern, 1, {});
   //Creamo un json para el nuevo curso
   let newCourse = {
     curso_id,
     usuario_id,
     categoria_id,
     curso_codigo: code,
-    curso_imagen: imagen,
+    curso_imagen,
     curso_nombre,
-    curso_descripcion: descripcion,
-    curso_conoci_prev: conoci_previo,
+    curso_descripcion,
+    curso_conoci_prev,
     privacidad_id,
   };
 
@@ -118,26 +117,39 @@ router.post('/coursesUsers', async (req, res, next) => {
     // Especificamos que la consulta se hara con un body.
     const { curso_id, correo } = req.body;
     // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
-    await pool.query('CALL crear_usuario_curso (?, ?, @error, @mensaje)', [
-      curso_id,
-      correo,
-    ]);
+    // TODO: Validaciones
+    // await pool.query('CALL crear_usuario_curso (?, ?, @error, @mensaje)', [
+    //   curso_id,
+    //   correo,
+    // ]);
     // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
-    const a = await pool.query(
-      'CALL crear_usuario_curso (?, ?, @error, @mensaje)',
-      [curso_id, correo]
-    );
+    // const a = await pool.query(
+    //   'CALL crear_usuario_curso (?, ?, @error, @mensaje)',
+    //   [curso_id, correo]
+    // );
     // Prueba de la salida en consola
-    console.log(a[0][0]['@mensaje']);
+    // console.log(a[0][0]['@mensaje']);
+    const userDB = await pool.query(
+      'select * from usuario where usuario_correo = ?',
+      [correo]
+    );
+    console.log(userDB[0].usuario_id);
+    await pool.query(
+      'insert into curso_usuario (curso_id,usuario_id,situacion_id) values (?,?,?) ',
+      [curso_id, userDB[0].usuario_id, 1]
+    );
     // Se muestra la respuesta exitosa a la consulta y los mensajes de salida del procedimiento almacenado
-    res.status(201).json({
-      error: a[0][0]['@error'],
-      msg: a[0][0]['@mensaje'],
-    });
+    // res.status(201).json({
+    //   error: a[0][0]['@error'],
+    //   msg: a[0][0]['@mensaje'],
+    // });
+
+    res.status(201).json({ msg: 'Añadido' });
     //Manejo de errror
     //EMpezamos con el catch
   } catch (err) {
     //Envio a middleware
+    console.log(err);
     next(err);
   }
 });
@@ -422,7 +434,14 @@ router.get('/course-user/:idcurso', async (req, res, next) => {
   //Empesamos con el try
 
   //Aqui va el query para obtener la lista de usuarios de un curso
-  let listUser = await pool.query('CALL listarUsuariosPorCurso(?);', [idcurso]);
+  // let listUser = await pool.query('CALL listarUsuariosPorCurso(?);', [idcurso]);
+  // TODO: Verificar cambio
+  let listUser = await pool.query(
+    'Select u.usuario_id,usuario_nombre,usuario_apellido_paterno,usuario_correo,usuario_imagen, c.situacion_id from usuario u join curso_usuario c on u.usuario_id = c.usuario_id where c.curso_id = ?',
+    [idcurso]
+  );
+  // 'Select * from curso_usuario where curso_id = ?',
+
   //Respuesta a la peticion
   res.status(200).json({
     message: 'Lista del curso: ' + idcurso,
@@ -572,15 +591,13 @@ router.post('/course-material/:idcurso', async (req, res, next) => {
 
     // Obtenemos los datos del cuerpo de la peticion
 
-    const { nombre, descripcion, fecha_creacion } = req.body;
+    const { material_nombre, material_descripcion } = req.body;
     //Creamos una variable para el idcurso
-    let curso_id = idcurso;
     //Creamos un json para el nuevo material
     const newMaterial = {
-      nombre,
-      descripcion,
-      fecha_creacion,
-      curso_id,
+      material_nombre,
+      material_descripcion,
+      curso_id: idcurso,
     };
     // Aqui va el query para guardar un nuevo material de un curso
     await pool.query('INSERT INTO material SET ? ', newMaterial);
