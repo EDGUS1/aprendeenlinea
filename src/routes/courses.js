@@ -800,7 +800,7 @@ router.get('/list-task-submissions/:idtarea', async (req, res, next) => {
   //Empesamos con el try
   // Aqui va el query
   const listaTareas = await pool.query(
-    'SELECT ta.tarea_id, ta.usuario_id, ta.url, ta.fecha_entrega, u.usuario_nombre, u.usuario_apellidos FROM tarea_asignada ta  INNER JOIN usuarios u ON ta.usuario_id = u.usuario_id   WHERE ta.tarea_id = ?',
+    'SELECT ta.tarea_id, ta.usuario_id, ta.tarea_asignada_url, ta.fecha_entrega, u.usuario_nombre, u.usuario_apellido_paterno FROM tarea_asignada ta INNER JOIN usuario u ON ta.usuario_id = u.usuario_id WHERE ta.tarea_id = ?',
     [idtarea]
   );
   //Respuesta a la peticion
