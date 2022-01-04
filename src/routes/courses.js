@@ -6,12 +6,12 @@ const router = express.Router();
 const pool = require('./../database');
 //Nos trae el metodo para hacer querys a la BD
 //importamos el generador de codigo para cursos
-var CodeGenerator = require('node-code-generator');
+const CodeGenerator = require('node-code-generator');
 //NOs craara un codigo segun un patron
 //INsatanciamos el generador
-var generator = new CodeGenerator();
+const generator = new CodeGenerator();
 //Declaramos el patron
-var pattern = '***#**##';
+const pattern = '***#**##';
 //Este patron se usara para crear el codigo
 
 //Declaramos la ruta
@@ -20,13 +20,11 @@ router.get('/cursos/:iduser', async (req, res, next) => {
 
   // Obtenemos el id del usuario de los parametros de la ruta de la peticion
   const { iduser } = req.params;
-  //Empesamos con el try
-
-  //Declaramos la variable list
-  let list;
 
   // Aqui va el query de buscar los cursos de un usuario
-  list = await pool.query('SELECT * FROM curso WHERE usuario_id = ?', [iduser]);
+  const list = await pool.query('SELECT * FROM curso WHERE usuario_id = ?', [
+    iduser,
+  ]);
   // Respuesta a la peticion
   res.status(200).json({
     list,
@@ -600,11 +598,11 @@ router.post('/course-material/:idcurso', async (req, res, next) => {
       curso_id: idcurso,
     };
     // Aqui va el query para guardar un nuevo material de un curso
-    await pool.query('INSERT INTO material SET ? ', newMaterial);
+    const list = await pool.query('INSERT INTO material SET ? ', newMaterial);
     //Variable para obtener los materiales
-    let list = await pool.query('SELECT * FROM material WHERE curso_id = ?', [
-      idcurso,
-    ]);
+    // let list = await pool.query('SELECT * FROM material WHERE curso_id = ?', [
+    //   idcurso,
+    // ]);
 
     // Respuesta a la peticion
     res.status(201).json(list);
@@ -811,21 +809,7 @@ router.get('/list-task-submissions/:idtarea', async (req, res, next) => {
   //EMpezamos con el catch
 });
 //Declaramos la ruta
-router.get('/listMaterials/:idcurso', async (req, res, next) => {
-  // Obtenemos los datos de los parametros
-  const { idcurso } = req.params;
-  //Empesamos con el try
-  // Aqui va el query
-  const listaMaterial = await pool.query(
-    'SELECT * from material WHERE curso_id = ?',
-    [idcurso]
-  );
 
-  //Respuesta a la peticion
-  res.status(200).json(listaMaterial);
-  //Manejo de errror
-  //EMpezamos con el catch
-});
 //Declaramos la ruta
 router.post('/entregarTarea', async (req, res, next) => {
   // Obtenemos los datos del cuerpo de la peticion

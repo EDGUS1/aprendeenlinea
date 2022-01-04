@@ -42,6 +42,7 @@ const suggestions = require('./routes/suggestions');
 const categories = require('./routes/categories');
 //Importamos la ruta taks
 const tasks = require('./routes/tasks');
+const material = require('./routes/material');
 
 //Importamos la ruta not found
 const notFound = require('./middleware/notFound');
@@ -60,6 +61,7 @@ app.use(suggestions);
 app.use(categories);
 //Se usa la ruta taks
 app.use(tasks);
+app.use(material);
 //Se declara la ruta base
 app.get('/', (req, res) => {
   //Resopuesta a la peticion
