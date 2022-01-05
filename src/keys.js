@@ -11,5 +11,6 @@ module.exports = {
     password: process.env.DB_PASSWORD,
     //Database
     database: process.env.DB_DATABASE,
+    connectionLimit: 4,
   },
 };

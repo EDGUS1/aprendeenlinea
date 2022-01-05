@@ -32,6 +32,7 @@ router.post('/creartarea', async (req, res, next) => {
     //Respuesta a la peticion
     res.status(200).json({
       msg: 'tarea creada',
+      tarea: tareaCreated,
     });
 
     //Manejo de errror
