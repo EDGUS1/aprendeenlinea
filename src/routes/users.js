@@ -139,13 +139,13 @@ router.post('/', async (req, res, next) => {
   const passwordHash = await bcrypt.hash(usuario_contrasenia, saltRounds);
 
   //Se crea la variable usuario_contrasenia con el password previamente encriptado
-  const usuario_contrasenia = passwordHash;
+  // const usuario_contrasenia = passwordHash;
 
   //se crear la variable newUser con los campos necesarios para guardarla en la BD
   let newUser = {
     usuario_nombre,
     usuario_apellido_paterno,
-    usuario_contrasenia,
+    usuario_contrasenia: passwordHash,
     usuario_correo,
   };
 
