@@ -116,10 +116,15 @@ router.put('/:id', upload.fields([]), async (req, res, next) => {
  */
 router.post('/', async (req, res, next) => {
   //Parámetros necesarios para crear al nuevo usuario
-  const { usuario_nombre, usuario_apellidos, password, correo, url } = req.body;
+  const {
+    usuario_nombre,
+    usuario_apellido_paterno,
+    usuario_contrasenia,
+    usuario_correo,
+  } = req.body;
 
   //Si el password es nulo la data es inválida
-  if (!password) {
+  if (!usuario_contrasenia) {
     //Respuesta a la peticion return
     return res.status(400).json({
       //Se notifica al frontend que la data es inválida
@@ -131,7 +136,7 @@ router.post('/', async (req, res, next) => {
   const saltRounds = 10;
   //Se encripta el password a través de la libreria bcrypt
   //Se guarda el password encriptado en la variable passwordHash
-  const passwordHash = await bcrypt.hash(password, saltRounds);
+  const passwordHash = await bcrypt.hash(usuario_contrasenia, saltRounds);
 
   //Se crea la variable usuario_contrasenia con el password previamente encriptado
   const usuario_contrasenia = passwordHash;
@@ -139,10 +144,9 @@ router.post('/', async (req, res, next) => {
   //se crear la variable newUser con los campos necesarios para guardarla en la BD
   let newUser = {
     usuario_nombre,
-    usuario_apellido_paterno: usuario_apellidos,
+    usuario_apellido_paterno,
     usuario_contrasenia,
-    usuario_correo: correo,
-    usuario_imagen: null,
+    usuario_correo,
   };
 
   //Empesamos con el try
