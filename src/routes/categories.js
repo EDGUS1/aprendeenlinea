@@ -6,32 +6,30 @@ const router = express.Router();
 const pool = require('./../database');
 //Nos trae el metodo para hacer querys a la BD
 
-//Definicion de la ruta
-router.get('/categories', async (req, res, next) => {
-  // Ruta para listar las categorias
+/**
+ * Ruta para listar las categorias
+ */
+router.get('/', async (req, res, next) => {
   // Aqui va el query para listar las categorias
   const categories = await pool.query('SELECT * FROM categoria');
 
   //Respuesta a la peticion
-  res.status(200).json({
-    categories,
-  });
+  res.status(200).json(categories);
 });
 
-router.get('/categories/:cat_id', async (req, res, next) => {
-  // Ruta para listar las categorias
-
-  const { cat_id } = req.params;
+/**
+ * Ruta para listar las categorias
+ */
+router.get('/:id', async (req, res, next) => {
+  const { id } = req.params;
   // Aqui va el query para listar las categorias
   const categories = await pool.query(
     'SELECT * FROM categoria WHERE categoria_id = ?',
-    [cat_id]
+    [id]
   );
 
   //Respuesta a la peticion
-  res.status(200).json({
-    categories,
-  });
+  res.status(200).json(categories);
 });
 //exportacion del router
 module.exports = router;

@@ -9,16 +9,10 @@ const pool = require('./../database');
 //encriptacion del password
 const bcrypt = require('bcrypt');
 
-//Metudo Get del login
-router.get('/login', async (req, res) => {
-  //Respuesta a la peticion
-  res.status(200).json({
-    gawr: 'gura',
-  });
-});
-
-//Metudo post para logear al usuario
-router.post('/login', async (req, res) => {
+/**
+ * Metodo post para loggear al usuario
+ */
+router.post('/', async (req, res) => {
   //Parámetros del login con el correo y el password.
   const { usuario_correo, usuario_contrasenia } = req.body;
 

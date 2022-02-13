@@ -4,66 +4,35 @@ const express = require('express');
 const router = express.Router();
 //Definicion del pool sql
 const pool = require('./../database');
-//Nos trae el metodo para hacer querys a la BD
 //importamos el generador de codigo para cursos
 const CodeGenerator = require('node-code-generator');
-//NOs craara un codigo segun un patron
-//INsatanciamos el generador
+//Instanciamos el generador
 const generator = new CodeGenerator();
 //Declaramos el patron
 const pattern = '***#**##';
-//Este patron se usara para crear el codigo
 
-//Declaramos la ruta
-router.get('/cursos/:iduser', async (req, res, next) => {
-  // Esta es la ruta para obtener los cursos de un usuario
-
+/**
+ * Esta es la ruta para obtener los cursos de un usuario
+ */
+router.get('/user/:iduser', async (req, res, next) => {
   // Obtenemos el id del usuario de los parametros de la ruta de la peticion
   const { iduser } = req.params;
 
   // Aqui va el query de buscar los cursos de un usuario
-  const list = await pool.query('SELECT * FROM curso WHERE usuario_id = ?', [
-    iduser,
-  ]);
-  // Respuesta a la peticion
-  res.status(200).json({
-    list,
-  });
-  //Manejo de errror
-  //EMpezamos con el catch
-});
-//Declaramos la ruta
-//Declaramos la ruta
-router.get('/courses/:id', async (req, res, next) => {
-  // Esta es la ruta para obtener la informacion de un curso
-
-  // Obtenemos el id del usuario de los parametros de la ruta de la peticion
-  const { id } = req.params;
-
-  // Aqui va el query para obtener un curso especifico por su id
-  const course = await pool.query('SELECT * FROM curso WHERE curso_id = ?', [
-    id,
-  ]);
-  // Aqui va el query para obtener un alumno especifico por su id
-  const alumnos = await pool.query(
-    'SELECT COUNT(*) FROM curso_usuario WHERE curso_id = ? and situacion_id = 1',
-    [id]
+  const courses = await pool.query(
+    'SELECT * FROM curso WHERE usuario_id = ? UNION SELECT c.* FROM curso_usuario AS cu INNER JOIN curso AS c ON cu.curso_id = c.curso_id WHERE cu.usuario_id = ?',
+    [iduser, iduser]
   );
   // Respuesta a la peticion
-  res.status(200).json({
-    data: course[0],
-    alumnos: Object.values(alumnos[0])[0],
-  });
-  //Manejo de errror
-  //EMpezamos con el catch
+  res.status(200).json(courses);
 });
-//Declaramos la ruta
-router.post('/courses', async (req, res, next) => {
-  // Esta es la ruta para crear un curso
 
+/**
+ * Esta es la ruta para crear un curso
+ */
+router.post('/', async (req, res, next) => {
   // Obtenemos los datos del cuerpo de la peticion
   const {
-    curso_id,
     usuario_id,
     categoria_id,
     curso_imagen,
@@ -76,7 +45,6 @@ router.post('/courses', async (req, res, next) => {
   const code = generator.generateCodes(pattern, 1, {});
   //Creamo un json para el nuevo curso
   let newCourse = {
-    curso_id,
     usuario_id,
     categoria_id,
     curso_codigo: code,
@@ -88,87 +56,67 @@ router.post('/courses', async (req, res, next) => {
   };
 
   // Aqui va el query para guardar un curso
-  await pool.query('INSERT INTO curso SET ? ', newCourse);
-  //const savedCourse = await pool.query('SELECT * FROM cursos WHERE curso_nombre = ?', [curso_nombre])
+  const response = await pool.query('INSERT INTO curso SET ? ', newCourse);
 
   // Respuesta a la peticion
   res.status(201).json({
-    msg: 'Curso creado',
-  }); // Aca se debe de enviar el nuevo curso creado
-  //Manejo de errror
-  //EMpezamos con el catch
+    msg: `Curso creado con el id: ${response.insertId}`,
+  });
 });
 
 /**
+ * Metodo post para agregar un alumno a un curso.
+ * Se especifica el id delcurso al que se va agregar al usuario.
+ * Declaramos la ruta
+ * Se especifica el correo del usuario que va unirse al curso.
+ *
  * @param {Number} curso_id
  * @param {String} correo
  * @param {Boolean} error
  * @param {String} mensaje
  */
-// Metodo post para agregar un alumno a un curso.
-// Se especifica el id del curso al que se va agregar al usuario.
-//Declaramos la ruta// Se especifica el correo del usuario que va unirse al curso.
-router.post('/coursesUsers', async (req, res, next) => {
+router.post('/user', async (req, res, next) => {
   // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
   try {
-    // Especificamos que usaremos un objeto para poder enviar una consulta.
-    // Especificamos que la consulta se hara con un body.
     const { curso_id, correo } = req.body;
-    // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
     // TODO: Validaciones
-    // await pool.query('CALL crear_usuario_curso (?, ?, @error, @mensaje)', [
-    //   curso_id,
-    //   correo,
-    // ]);
-    // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
-    // const a = await pool.query(
-    //   'CALL crear_usuario_curso (?, ?, @error, @mensaje)',
-    //   [curso_id, correo]
-    // );
-    // Prueba de la salida en consola
-    // console.log(a[0][0]['@mensaje']);
+
     const userDB = await pool.query(
-      'select * from usuario where usuario_correo = ?',
+      'SELECT * FROM usuario WHERE usuario_correo = ?',
       [correo]
     );
-    console.log(userDB[0].usuario_id);
+
     await pool.query(
-      'insert into curso_usuario (curso_id,usuario_id,situacion_id) values (?,?,?) ',
+      'INSERT INTO curso_usuario (curso_id,usuario_id,situacion_id) VALUES (?,?,?) ',
       [curso_id, userDB[0].usuario_id, 1]
     );
-    // Se muestra la respuesta exitosa a la consulta y los mensajes de salida del procedimiento almacenado
-    // res.status(201).json({
-    //   error: a[0][0]['@error'],
-    //   msg: a[0][0]['@mensaje'],
-    // });
 
-    res.status(201).json({ msg: 'Añadido' });
-    //Manejo de errror
-    //EMpezamos con el catch
+    res.status(201).json({ msg: 'Alumno añadido', err: false });
   } catch (err) {
     //Envio a middleware
-    console.log(err);
     next(err);
   }
 });
-//Declaramos la ruta
-router.post('/deletecoursesUsers', async (req, res, next) => {
-  // Ruta para eliminar un usuario a un curso
+
+/**
+ * Ruta para eliminar un usuario de un curso
+ */
+router.delete('/user', async (req, res, next) => {
   try {
-    //Obtenemos los datos del cuerpo ed la peticion
+    // TODO: Validaciones
+
+    // Obtenemos los datos del cuerpo ed la peticion
     const { curso_id, usuario_id } = req.body;
     // Creamos el query para traeros la informacion de la bd
     await pool.query(
-      `DELETE FROM curso_usuario WHERE curso_id = ${curso_id} AND usuario_id = ${usuario_id}`
+      'DELETE FROM curso_usuario WHERE curso_id = ? AND usuario_id = ?',
+      [curso_id, usuario_id]
     );
-    // await pool.query('CALL crear_usuario_curso (?, ?, @error, @mensaje)', [curso_id, correo])
-    // const a = await pool.query('CALL crear_usuario_curso (?, ?, @error, @mensaje)', [curso_id, correo])
-    // console.log(a[0][0]['@mensaje'])
+
     res.status(201).json({
       msg: 'Usuario eliminado del curso',
+      err: false,
     });
-    //Manejo de errror
-    //EMpezamos con el catch
   } catch (err) {
     //Envio a middleware
     next(err);
@@ -176,106 +124,41 @@ router.post('/deletecoursesUsers', async (req, res, next) => {
 });
 
 /**
- * @param {Number} tarea_asignada_id
- * @param {String} notificacion
- */
-// Metodo post para mostrar notificacion de tarea asignaada a un usuario
-// Se especifica el id de la tarea asignada al usuario.
-//Declaramos la ruta// Se especifica el mensaje de notificacion
-router.post('/notificacion', async (req, res, next) => {
-  // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
-  try {
-    // Especificamos que uaremos un objeto para poder enviar una consulta.
-    // Especificamos que la consulta se hara con un body.
-    const { tarea_asignada_id, notificacion } = req.body;
-    // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
-    await pool.query('CALL notificacion_curso (?, ?) ', [
-      tarea_asignada_id,
-      notificacion,
-    ]);
-    // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
-    const savedCourseUser = await pool.query(
-      'select * from  tarea_asignada where tarea_asignada_id = ? ',
-      tarea_asignada_id
-    );
-    // Se muestra la respuesta exitosa a la consulta
-    res.status(200).json(savedCourseUser);
-    //Manejo de errror
-    //EMpezamos con el catch
-  } catch (err) {
-    //Envio a middleware
-    next(err);
-  }
-});
-
-/**
- * @param {Number} usuario_id
- * @param {Number} curso_id
- * @param {Number} situacion_id
- */
-// Metodo post para aceptar la solicitud de acceso de un alumno
-// Se especifica el id del usuario quien manda la solucitud
-// Se especifica el id del curso al que se solicita acceso
-//Declaramos la ruta// Se especifica el id de la situacion con la que se acepta el curso
-router.post('/aceptarSolicitudAcceso', async (req, res, next) => {
-  // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
-  try {
-    // Especificamos que usaremos un objeto para poder enviar una consulta.
-    // Especificamos que la consulta se hara con un body.
-    const { usuario_id, curso_id, situacion_id } = req.body;
-    // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
-    await pool.query('CALL aceptarSolicitudAcceso (?, ?, ?) ', [
-      usuario_id,
-      curso_id,
-      situacion_id,
-    ]);
-    // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
-    const solicitud = await pool.query(
-      'CALL aceptarSolicitudAcceso (?, ?, ?) ',
-      [usuario_id, curso_id, situacion_id]
-    );
-    // Se muestra la respuesta exitosa a la consulta
-    res.status(200).json(solicitud);
-    //Manejo de errror
-    //EMpezamos con el catch
-  } catch (err) {
-    //Envio a middleware
-    next(err);
-  }
-});
-
-/**
+ * Metodo post para unirse a un curso mediante un codigo
+ * Se especifica el codigo del curso a acceder
+ * Declaramos la ruta
+ * Se especifica el id del usuario que se unira al curso
+ *
  * @param {String} codigo
  * @param {Number} usuario_id
  */
-// Metodo post para unirse a un curso mediante un codigo
-// Se especifica el codigo del curso a acceder
-//Declaramos la ruta// Se especifica el id del usuario que se unira al curso
-router.post('/unirPorCodigo', async (req, res, next) => {
+router.post('/code', async (req, res, next) => {
   // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
   try {
-    // Especificamos que usaremos un objeto para poder enviar una consulta.
-    // Especificamos que la consulta se hara con un body.
-    const { codigo, usuario_id } = req.body;
-    // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
-    await pool.query('CALL unirseCursoPorCodigo (?, ?, @error, @mensaje)', [
-      codigo,
-      usuario_id,
-    ]);
-    // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
-    const a = await pool.query(
-      'CALL unirseCursoPorCodigo (?, ?, @error, @mensaje)',
-      [codigo, usuario_id]
+    const { curso_codigo, usuario_id } = req.body;
+    // TODO: AGREGAR VALIDADIONES
+
+    let mensaje = '';
+
+    const response = await pool.query(
+      'select * from curso_usuario where usuario_id = ? and curso_id = ((SELECT curso_id FROM curso WHERE curso_codigo = ?))',
+      [usuario_id, curso_codigo]
     );
-    // Prueba de la salida en consola
-    console.log(a[0][0]['@mensaje']);
-    // Se muestra la respuesta exitosa a la consulta y los mensajes de salida del procedimiento almacenado
+
+    if (response == '') {
+      mensaje = 'Se agrego un nuevo usuario al curso';
+      await pool.query(
+        'INSERT INTO curso_usuario (curso_id, usuario_id, situacion_id) VALUES ((SELECT curso_id FROM curso WHERE curso_codigo = ?), ?, 1)',
+        [curso_codigo, usuario_id]
+      );
+    } else {
+      mensaje = 'El usuario ya se encuentra en el curso';
+    }
+
     res.status(201).json({
-      error: a[0][0]['@error'],
-      msg: a[0][0]['@mensaje'],
+      error: false,
+      msg: mensaje,
     });
-    //Manejo de errror
-    //EMpezamos con el catch
   } catch (err) {
     //Envio a middleware
     next(err);
@@ -283,257 +166,51 @@ router.post('/unirPorCodigo', async (req, res, next) => {
 });
 
 /**
- * @param {Number} usuario_id
+ * Ruta para obtener la lista de cursos publicos
  */
-// Metodo get para listar los cursos agregados por un profesor
-//Declaramos la ruta// Se especifica el id del usuario profesor quien agrego alumnos a su curso
-router.get(
-  '/listarCursosAgregadosPorProfesor/:usuario_id',
-  async (req, res, next) => {
-    // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
-    // Especificamos que usaremos un objeto para poder enviar una consulta.
-    // Especificamos que la consulta se hara con un body.
-    const { usuario_id } = req.params;
-    // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
-    await pool.query('CALL listarCursosAgregadosPorProfesor (?) ', [
-      usuario_id,
-    ]);
-    // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
-    const listaCursosAgregadosPorProfesor = await pool.query(
-      'CALL listarCursosAgregadosPorProfesor (?)  ',
-      usuario_id
-    );
-    // Se muestra la respuesta exitosa a la consulta
-    res.status(200).json(listaCursosAgregadosPorProfesor);
-    //Manejo de errror
-    //EMpezamos con el catch
-  }
-);
-
-/**
- * @param {Number} usuario_id
- */
-// Metodo get para listar los cursos con solicitud de acceso que tiene un profesor
-//Declaramos la ruta// Se especifica el id del usuario profesor quien creo los cursos con solcicitud de acceso
-router.get(
-  '/listarCursosConSolicicitudAcceso/:usuario_id',
-  async (req, res, next) => {
-    // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
-    // Especificamos que usaremos un objeto para poder enviar una consulta.
-    // Especificamos que la consulta se hara con un oarametro.
-    const { usuario_id } = req.params;
-    // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
-    await pool.query('CALL listarCursosConSolicicitudAcceso (?) ', [
-      usuario_id,
-    ]);
-    // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
-    const listaCursosConSolicicitudAcceso = await pool.query(
-      'CALL listarCursosConSolicicitudAcceso (?)  ',
-      usuario_id
-    );
-    // Se muestra la respuesta exitosa a la consulta
-    res.status(200).json(listaCursosConSolicicitudAcceso);
-    //Manejo de errror
-    //EMpezamos con el catch
-  }
-);
-
-/**
- * @param {Number} usuario_id
- */
-// Metodo get para listar los cursos con solicitud de acceso que tiene un alumno
-//Declaramos la ruta// Se especifica el id del usuario alumno quien tiene cursos con solicitud de acceso
-router.get(
-  '/listarCursosConSolicicitudAccesoParaAlumnos/:usuario_id',
-  async (req, res, next) => {
-    // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
-    // Especificamos que usaremos un objeto para poder enviar una consulta.
-    // Especificamos que la consulta se hara con un oarametro.
-    const { usuario_id } = req.params;
-    // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
-    await pool.query('CALL listarCursosConSolicicitudAccesoParaAlumnos (?) ', [
-      usuario_id,
-    ]);
-    // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
-    const listaCursosConSolicicitudAccesoParaAlumnos = await pool.query(
-      'CALL listarCursosConSolicicitudAccesoParaAlumnos (?)  ',
-      usuario_id
-    );
-    // Se muestra la respuesta exitosa a la consulta
-    res.status(200).json(listaCursosConSolicicitudAccesoParaAlumnos);
-    //Manejo de errror
-    //EMpezamos con el catch
-  }
-);
-
-/**
- * @param {Number} usuario_id
- */
-// Metodo get para listar las notificaciones de un usuario
-//Declaramos la ruta// Se especifica el id del usuario del cual queremos listar sus notificaciones
-router.get(
-  '/listarNotificacionesPorUsuario/:usuario_id',
-  async (req, res, next) => {
-    // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
-    // Especificamos que usaremos un objeto para poder enviar una consulta.
-    // Especificamos que la consulta se hara con un parametro.
-    const { usuario_id } = req.params;
-    // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
-    await pool.query('CALL listarNotificacionesPorUsuario (?) ', [usuario_id]);
-    // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
-    const listaNotificacionesPorUsuario = await pool.query(
-      'CALL listarNotificacionesPorUsuario (?)  ',
-      usuario_id
-    );
-    // Se muestra la respuesta exitosa a la consulta
-    res.status(200).json(listaNotificacionesPorUsuario);
-    //Manejo de errror
-    //EMpezamos con el catch
-  }
-);
-
-/**
- * @param {Number} usuario_id
- * @param {Number} curso_id
- * @param {Number} situacion_id
- */
-// Metodo post para aceptar la invitacion para acceder a un curso
-// Se especifica el id del usuario a quien se le manda la invitacion
-// Se especifica el id del curso al que invita al usuario
-//Declaramos la ruta// Se especifica el id de la situacion con la que se acepta el curso
-router.post('/aceptarInvitacionDeProfesor', async (req, res, next) => {
-  // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
-  // Especificamos que usaremos un objeto para poder enviar una consulta.
-  // Especificamos que la consulta se hara con un body.
-  const { usuario_id, curso_id, situacion_id } = req.body;
-  // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
-  await pool.query('CALL aceptar_invitacion_profesor (?, ?, ?) ', [
-    usuario_id,
-    curso_id,
-    situacion_id,
-  ]);
-  // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
-  const cursoAceptado = await pool.query(
-    'SELECT * FROM curso_usuario where curso_id = ? and usuario_id = ?',
-    [usuario_id, curso_id]
-  );
-  // Se muestra la respuesta exitosa a la consulta
-  res.status(201).json(cursoAceptado);
-  //Manejo de errror
-  //EMpezamos con el catch
-});
-
-//Declaramos la ruta
-router.get('/course-user/:idcurso', async (req, res, next) => {
-  // Ruta para obtener la lista de usuarios de un curso
-
-  //Obtenemos el id del curso de los parametros de la ruta de la peticion
-  const { idcurso } = req.params;
-  //Empesamos con el try
-
-  //Aqui va el query para obtener la lista de usuarios de un curso
-  // let listUser = await pool.query('CALL listarUsuariosPorCurso(?);', [idcurso]);
-  // TODO: Verificar cambio
-  let listUser = await pool.query(
-    'Select u.usuario_id,usuario_nombre,usuario_apellido_paterno,usuario_correo,usuario_imagen, c.situacion_id from usuario u join curso_usuario c on u.usuario_id = c.usuario_id where c.curso_id = ?',
-    [idcurso]
-  );
-  // 'Select * from curso_usuario where curso_id = ?',
-
-  //Respuesta a la peticion
-  res.status(200).json({
-    message: 'Lista del curso: ' + idcurso,
-    data: listUser,
-  });
-  //Manejo de errror
-  //EMpezamos con el catch
-});
-//Declaramos la ruta
-router.get('/coursesofuser/:iduser', async (req, res, next) => {
-  // Ruta para obtener la lista de cursos de un usuario
-
-  // Obtenemos el id del usuario de los parametros de la ruta de la peticion
-  const { iduser } = req.params;
-
-  //Empesamos con el try
-  // Aqui va el query para obtener la lista de cursos de un usuario
-
-  let listUser = await pool.query(
-    `
-    SELECT c.*
-    FROM curso_usuario AS cu 
-    INNER JOIN curso AS c 
-    ON cu.curso_id = c.curso_id 
-    WHERE cu.usuario_id = ?
-    `,
-    [iduser]
-  );
-
-  // Respuesta a la peticion
-  res.status(200).json({
-    message: 'Lista de cursos del usuario: ' + iduser,
-    data: listUser,
-  });
-  //Manejo de errror
-  //EMpezamos con el catch
-});
-//Declaramos la ruta
-router.get('/coursespublic', async (req, res, next) => {
-  // Ruta para obtener la lista de cursos publicos
-  //Empesamos con el try
+router.get('/public', async (req, res, next) => {
   // Query para obtener la lista de cursos publicos
-  let cursos = await pool.query('SELECT * FROM curso');
+  const cursos = await pool.query('SELECT * FROM curso');
   //Obtenemos la cantidad de cursos
-  let cantCursos = await pool.query('SELECT count(curso_id) FROM curso');
+  let cantCursos = await pool.query(
+    'SELECT count(curso_id) as total FROM curso'
+  );
   // Respuesta a la peticion
-  res.status(200).json({
-    cursos,
-    cantidad: cantCursos,
-  });
-  //Manejo de errror
-  //EMpezamos con el catch
+  res.status(200).json({ cursos, total: cantCursos[0].total });
 });
-//Declaramos la ruta
-router.get('/coursespublicmax', async (req, res, next) => {
-  // Ruta para obtener la lista de cursos publicos
-  //Empesamos con el try
+
+/**
+ * Ruta para obtener la lista de cursos publicos
+ */
+router.get('/publicmax', async (req, res, next) => {
   // Query para obtener la lista de cursos publicos
-  /* let cursos = await pool.query(
-    'SELECT c.* FROM curso as c JOIN curso_usuario as cu ON c.curso_id = cu.curso_id WHERE c.privacidad_id IN (1,5) GROUP BY c.curso_id ORDER BY COUNT(*) DESC LIMIT 4;'
-  ); */
+
   let cursos = await pool.query(
     'SELECT * FROM curso c GROUP BY c.curso_id ORDER BY COUNT(*) DESC LIMIT 4;'
   );
   // Respuesta a la peticion
-  res.status(200).json({
-    cursos,
-  });
-  //Manejo de errror
-  //EMpezamos con el catch
+  res.status(200).json(cursos);
 });
-//Declaramos la ruta
-router.get('/coursespublic/:iduser', async (req, res, next) => {
-  // Ruta para obtener la lista de cursos publicos de un usuario
 
+/**
+ * Ruta para obtener la lista de cursos publicos de un usuario
+ */
+router.get('/public/:iduser', async (req, res, next) => {
   // Obtenemos el id del usuario de los parametros de la ruta de la peticion
   const { iduser } = req.params;
-  //Empesamos con el try
   // Query para obtener la lista de cursos publicos de un usuario
   let cursos = await pool.query(
     'SELECT * FROM curso WHERE privacidad_id = 1 AND usuario_id = ?',
     [iduser]
   );
   // Respuesta a la peticion
-  res.status(200).json({
-    cursos,
-  });
-  //Manejo de errror
-  //EMpezamos con el catch
+  res.status(200).json(cursos);
 });
-//Declaramos la ruta
-router.post('/coursesEdit/:idcurso', async (req, res, next) => {
-  // Ruta para actualizar los datos de un curso
 
+/**
+ * Ruta para actualizar los datos de un curso
+ */
+router.put('/:idcurso', async (req, res, next) => {
   //Empesamos con el try
   try {
     // Obtenemos el id del curso de los parametros de la ruta de la peticion
@@ -541,196 +218,44 @@ router.post('/coursesEdit/:idcurso', async (req, res, next) => {
     // Obtenemos los datos del cuerpo de la peticion
 
     const {
-      codigo,
-      imagen,
+      // curso_imagen,
       curso_nombre,
-      descripcion,
-      conoci_previo,
+      curso_descripcion,
+      curso_conoci_prev,
       privacidad_id,
       categoria_id,
     } = req.body;
     //Jsin para el nuevo curso
     const newCourse = {
-      codigo,
-      imagen,
       curso_nombre,
-      descripcion,
-      conoci_previo,
+      curso_descripcion,
+      curso_conoci_prev,
       privacidad_id,
       categoria_id,
+      curso_fecha_modificacion: new Date(Date.now()),
     };
     // Aqui va el query para editar un curso
-    await pool.query('UPDATE curso set ? WHERE curso_id = ?', [
+    await pool.query('UPDATE curso SET ? WHERE curso_id = ?', [
       newCourse,
       idcurso,
     ]);
     //variable para tener los cursos de la bd
-    let list = await pool.query('SELECT * FROM curso WHERE curso_id = ?', [
+    let course = await pool.query('SELECT * FROM curso WHERE curso_id = ?', [
       idcurso,
     ]);
 
     // Respuesta a la peticion
-    res.status(201).json(list);
-    //Manejo de errror
-    //EMpezamos con el catch
-  } catch (err) {
-    //Envio a middleware
-    next(err);
-  }
-});
-//Declaramos la ruta
-router.post('/course-material/:idcurso', async (req, res, next) => {
-  // Ruta para crear un nuevo material de un curso
-
-  //Empesamos con el try
-  try {
-    // Obtenemos el id del curso de los parametros de la ruta de la peticion
-    const { idcurso } = req.params;
-
-    // Obtenemos los datos del cuerpo de la peticion
-
-    const { material_nombre, material_descripcion } = req.body;
-    //Creamos una variable para el idcurso
-    //Creamos un json para el nuevo material
-    const newMaterial = {
-      material_nombre,
-      material_descripcion,
-      curso_id: idcurso,
-    };
-    // Aqui va el query para guardar un nuevo material de un curso
-    const list = await pool.query('INSERT INTO material SET ? ', newMaterial);
-    //Variable para obtener los materiales
-    // let list = await pool.query('SELECT * FROM material WHERE curso_id = ?', [
-    //   idcurso,
-    // ]);
-
-    // Respuesta a la peticion
-    res.status(201).json(list);
-    //Manejo de errror
-    //EMpezamos con el catch
-  } catch (err) {
-    //Envio a middleware
-    next(err);
-  }
-});
-//Declaramos la ruta
-router.get('/list-task/:idcurso', async (req, res, next) => {
-  // Ruta para listar las tareas de un curso
-
-  //Empesamos con el try
-  // Obtenemos el id del curso de los parametros de la ruta de la peticion
-  const { idcurso } = req.params;
-
-  // Aqui va el query para listar las tareas de un curso
-  let list = await pool.query('SELECT * FROM tareas WHERE curso_id = ?', [
-    idcurso,
-  ]);
-
-  // Respuesta a la peticion
-  res.status(200).json(list);
-  //Manejo de errror
-  //EMpezamos con el catch
-});
-//Declaramos la ruta
-router.post('/solicitarCursoPrivado', async (req, res, next) => {
-  // Aqui el query para solicitar acceso a un curso privado
-  //Metodo para que el alumno pueda solicitad un notificacion al profesor que quiere unirse a su curso privado
-
-  //En caso que sea este en lo correcto
-  //Empesamos con el try
-  try {
-    //Se solicita el id_curso y id_usuario a traves de body.
-    const { curso_id, usuario_id } = req.body;
-
-    //Se crea y se le asigna la situacion_id "3"
-    let situacion_id = '3';
-
-    //Se guarda en una variable, los datos de curso_id, usuario_id, situacion_id
-    let solicitudPrivate = {
-      curso_id,
-      usuario_id,
-      situacion_id,
-    };
-
-    //Se solicita a un query que inserte en la tabla curso_usuario los datos.
-    await pool.query('INSERT INTO curso_usuario SET ? ', solicitudPrivate);
-
-    //Se guarda en una variable constante los datos que fueron solictados en el query
-    const savedSocitudPrivate = await pool.query(
-      'SELECT * FROM curso_usuario WHERE curso_id = ?',
-      curso_id
-    );
-
-    //Se manda en forma de json al fronted los datos encontrados en la tabla
-    res.status(201).json(savedSocitudPrivate);
-
-    //Manejo de errror
-    //EMpezamos con el catch
-  } catch (err) {
-    //Envio a middleware
-    next(err);
-  }
-});
-//Declaramos la ruta
-router.get('/AcceptarSolicitudPrivado/:idcurso', async (req, res, next) => {
-  //Metodo que le muestra al profesor una lista de alumnos que han mandado solicitud
-
-  //Se solicita el id_curso a traves de enlace.
-  const { idcurso } = req.params;
-
-  //Si coloca como que la situacion_id siempre va ser 3
-  const situacion_id = '3';
-
-  //En caso que sea correcto
-  //Empesamos con el try
-  //Se declara una variable
-  let alumnosPendientes;
-  //Se guarda en la varibale una lista de alumnos que tengan la situacion_id de 3
-  alumnosPendientes = await pool.query(
-    'SELECT * FROM curso_usuario WHERE curso_id = ? AND situacion_id = ?',
-    [idcurso, situacion_id]
-  );
-  //Manda al fronted en forma de json la varible
-  res.status(200).json(alumnosPendientes);
-  //Manejo de errror
-  //EMpezamos con el catch
-});
-//Declaramos la ruta
-router.put('/AcceptarSolicitudPrivado/:idcurso', async (req, res, next) => {
-  //Metodo para que el profesor pueda aceptar y mandar las solicitud de los cursos  Privado
-  const { idcurso } = req.params;
-  // console.log(idcurso)
-
-  const { usuario_id, situacion_id } = req.body;
-  // situacion_id = "1": acceptado;
-  // situacion_id = "2": rechazado;
-
-  //En caso se encuentra los datos ingresados perfectamente
-  //Empesamos con el try
-  try {
-    //Actualizar el la situacion de los alumnos en la tabla curso_usario, dependiendo del curso y usuario.
-    await pool.query(
-      'UPDATE curso_usuario SET situacion_id = ? WHERE curso_id = ? AND usuario_id = ?',
-      [situacion_id, idcurso, usuario_id]
-    );
-    //Se guarda en una variable los datos de la tabla curso_usuario depeniendo el curso_id y usuario_id.
-    const aceptarsolictudPrivate = await pool.query(
-      'SELECT * FROM curso_usuario WHERE curso_id = ? AND usuario_id = ?',
-      [idcurso, usuario_id]
-    );
-    //Se manda la variable sobre como se encuentra actualizada
-    //Respuesta a la peticion
-    res.status(200).json(aceptarsolictudPrivate);
-    //Manejo de errror
-    //EMpezamos con el catch
+    res.status(201).json(course[0]);
   } catch (err) {
     //Envio a middleware
     next(err);
   }
 });
 
-//Declaramos la ruta
-router.post('/join-public-course/:idcurso', async (req, res, next) => {
+/**
+ * Unirse curso publico
+ */
+router.post('/join/:idcurso', async (req, res, next) => {
   //Obtenemos los datos del parametros
   const { idcurso } = req.params;
   //Obtenemos datos del cuerpo de la pericino
@@ -753,7 +278,7 @@ router.post('/join-public-course/:idcurso', async (req, res, next) => {
       situacion_id: situacion,
     };
     //se declara la existencia
-    var existe = '';
+    let existe = '';
     //Condicional para comprobar la privacidad
     if (curso[0].privacidad_id == privacidad_publico) {
       //Query para traer los cursos
@@ -761,6 +286,7 @@ router.post('/join-public-course/:idcurso', async (req, res, next) => {
         'SELECT * FROM curso_usuario WHERE usuario_id = ?',
         [iduser]
       );
+
       //Creamos un ciclo para el cursos:uduario
       for (let i in curso_usuario) {
         //Condicioal
@@ -779,12 +305,14 @@ router.post('/join-public-course/:idcurso', async (req, res, next) => {
         //Query para traer los cursos
         await pool.query('INSERT INTO curso_usuario SET ? ', newUser);
         //Respouesta a la peticion
-        res.status(200).json('usuaio unido al curso Publico');
+        res.status(200).json({ msg: 'Usuario unido al curso', err: false });
         //Else de la condicional
       } else {
         //Respiesta a la perticion
-        res.status(200).json('usuario ya existe');
+        res.status(200).json({ msg: 'Usuario ya existe', err: true });
       }
+    } else {
+      res.status(200).json({ msg: 'El curso no es publico', err: true });
     }
     //Manejo de errror
     //EMpezamos con el catch
@@ -793,44 +321,22 @@ router.post('/join-public-course/:idcurso', async (req, res, next) => {
     next(err);
   }
 });
-//Declaramos la ruta
-router.get('/list-task-submissions/:idtarea', async (req, res, next) => {
-  // Obtenemos los datos de los parametros
-  const { idtarea } = req.params;
-  //Empesamos con el try
-  // Aqui va el query
-  const listaTareas = await pool.query(
-    'SELECT ta.tarea_id, ta.usuario_id, ta.tarea_asignada_url, ta.fecha_entrega, u.usuario_nombre, u.usuario_apellido_paterno FROM tarea_asignada ta INNER JOIN usuario u ON ta.usuario_id = u.usuario_id WHERE ta.tarea_id = ?',
-    [idtarea]
-  );
-  //Respuesta a la peticion
-  res.status(200).json(listaTareas);
-  //Manejo de errror
-  //EMpezamos con el catch
-});
-//Declaramos la ruta
 
-//Declaramos la ruta
-router.post('/entregarTarea', async (req, res, next) => {
-  // Obtenemos los datos del cuerpo de la peticion
-  const { tarea_asignada_id, usuario_id, url } = req.body;
-  //Empesamos con el try
-  try {
-    // Aqui va el query
-    await pool.query(
-      'UPDATE tarea_asignada set ? WHERE usuario_id = ? AND tarea_asignada_id = ?',
-      [{ url }, usuario_id, tarea_asignada_id]
-    );
-    //Respuesta a la peticion
-    res.status(200).json({
-      msg: 'tarea entragasa',
-    });
-    //Manejo de errror
-    //EMpezamos con el catch
-  } catch (err) {
-    //Envio a middleware
-    next(err);
-  }
+/**
+ * Esta es la ruta para obtener la informacion de un curso
+ */
+router.get('/:id', async (req, res, next) => {
+  // Obtenemos el id del usuario de los parametros de la ruta de la peticion
+  const { id } = req.params;
+
+  // Aqui va el query para obtener un curso especifico por su id
+  const course = await pool.query(
+    'SELECT *, (SELECT COUNT(*) FROM curso_usuario WHERE curso_id = ? and situacion_id = 1) as alumnos  FROM curso WHERE curso_id = ?',
+    [id, id]
+  );
+
+  // Respuesta a la peticion
+  res.status(200).json(course[0]);
 });
 
 module.exports = router;

@@ -42,26 +42,34 @@ const suggestions = require('./routes/suggestions');
 const categories = require('./routes/categories');
 //Importamos la ruta taks
 const tasks = require('./routes/tasks');
+//Importamos la ruta material
 const material = require('./routes/material');
+//Importamos la ruta notification
+const notification = require('./routes/notification');
 
 //Importamos la ruta not found
 const notFound = require('./middleware/notFound');
 //Importamos el control de errores
 const errors = require('./middleware/errors');
 
+const version_api = '/api/v2';
 //Se usa la ruta login
-app.use(login);
+app.use(`${version_api}/login`, login);
 //Se usa la ruta users
-app.use(users);
+app.use(`${version_api}/user`, users);
 //Se usa la ruta course
-app.use(course);
+app.use(`${version_api}/course`, course);
 //Se usa la ruta suggestion
-app.use(suggestions);
+app.use(`${version_api}/suggestion`, suggestions);
 //Se usa la ruta categories
-app.use(categories);
+app.use(`${version_api}/category`, categories);
 //Se usa la ruta taks
-app.use(tasks);
-app.use(material);
+app.use(`${version_api}/task`, tasks);
+//Se usa la ruta material
+app.use(`${version_api}/material`, material);
+//Se usa la ruta notification
+app.use(`${version_api}/notification`, notification);
+
 //Se declara la ruta base
 app.get('/', (req, res) => {
   //Resopuesta a la peticion

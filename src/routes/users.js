@@ -1,4 +1,3 @@
-//Middlewares
 //Framework de nodejs
 const express = require('express');
 //Definicion del router
@@ -19,30 +18,25 @@ let upload = multer({
   },
 });
 
-//Metodo get para listar a todos los usuarios existentes
-router.get('/users', async (req, res, next) => {
-  //Empesamos con el try
+/**
+ * Método get para listar a todos los usuarios existentes
+ */
+router.get('/', async (req, res, next) => {
   //Se accede a la BD y se seleciona  a todos los usuarios
-  //Todos los datos se guardan en la variable list
-  let list = await pool.query('SELECT * FROM usuario');
+  let users = await pool.query('SELECT * FROM usuario');
   //Respuesta a la peticion
-  res.status(200).json({
-    //Se devuelve la lista de usuarios al Frontend
-    list,
-  });
-
-  //Manejo de errror
-  //EMpezamos con el catch
+  res.status(200).json(users);
 });
 
-//Metodo get para listar a un solo usuarios
-router.get('/users/:id', async (req, res, next) => {
+/**
+ * Metodo get para listar a un solo usuarios
+ */
+router.get('/:id', async (req, res, next) => {
   //Parámetro id del usuario para listarlo
   const { id } = req.params;
   //Empesamos con el try
   try {
     //Se accede a la BD y se seleciona  al usuarios a través de su id única
-    //Los datos del usuario se guarda en la variable user
     let user = await pool.query('SELECT * FROM usuario WHERE usuario_id = ?', [
       id,
     ]);
@@ -82,9 +76,10 @@ router.get('/users/:id', async (req, res, next) => {
   }
 });
 
-//Metodo get para editar al usuario
-router.post('/useredit/:id', upload.fields([]), async (req, res, next) => {
-  //Empesamos con el try
+/**
+ * Metodo para editar al usuario
+ */
+router.put('/:id', upload.fields([]), async (req, res, next) => {
   //Parámetro id extraido de la ruta
   const { id } = req.params;
   //Parámetros extraidos del cuerpo  enviado por el frontend
@@ -95,7 +90,6 @@ router.post('/useredit/:id', upload.fields([]), async (req, res, next) => {
     usuario_descripcion,
   } = req.body;
   //Constante newUser user donde se guardan los parámetros del cuerpo
-  console.log(req.body);
 
   const newUser = {
     usuario_nombre,
@@ -108,23 +102,19 @@ router.post('/useredit/:id', upload.fields([]), async (req, res, next) => {
   //Se accede a la BD y se realiza un update a traves de la variable newUser y el parametro id
   await pool.query('UPDATE usuario set ? WHERE usuario_id = ?', [newUser, id]);
 
-  //Se accede a la BD y se seleciona al usuario previamente updateado a través del parametro id
-  //Se guardan los nuevos datos del usuario en la variable user1
-  const user1 = await pool.query('SELECT * FROM usuario WHERE usuario_id = ?', [
+  //Se guardan los nuevos datos del usuario en la variable user
+  const user = await pool.query('SELECT * FROM usuario WHERE usuario_id = ?', [
     id,
   ]);
 
   //Respuesta a la peticion
-  res.status(200).json({
-    //Se devuelve el usuario updateado al Frontend
-    user1,
-  });
-  //Manejo de errror
-  //EMpezamos con el catch
+  res.status(200).json(user);
 });
 
-//Metodo POST para crear un nuevo usuario
-router.post('/register', async (req, res, next) => {
+/**
+ * Metodo POST para crear un nuevo usuario
+ */
+router.post('/', async (req, res, next) => {
   //Parámetros necesarios para crear al nuevo usuario
   const { usuario_nombre, usuario_apellidos, password, correo, url } = req.body;
 
@@ -160,20 +150,41 @@ router.post('/register', async (req, res, next) => {
     //Se accede a la BD y se inserta o guarda al muevo usuario
     await pool.query('INSERT INTO usuario set ? ', newUser);
 
-    //Se accede a la BD y se seleciona al usuario de previamente creado a través del usuario_nombre
     //Se guardan los datos usuario en la variable usuario
     const usuario = await pool.query(
       'SELECT * FROM usuario WHERE usuario_nombre = ?',
       [newUser.usuario_nombre]
     );
     //Se devuelve el usuario creado al Frontend
-    //Respuesta a la peticion
     res.status(201).json(usuario[0]);
   } catch (e) {
     //Se maneja los errores en caso de haberlo
-    //Respuesta a la peticion
     next(e);
   }
+});
+
+/**
+ * Ruta para obtener la lista de usuarios de un curso
+ */
+router.get('/course/:idcurso', async (req, res, next) => {
+  //Obtenemos el id del curso de los parametros de la ruta de la peticion
+  const { idcurso } = req.params;
+  //Empesamos con el try
+
+  // TODO: Verificar cambio
+  let listUser = await pool.query(
+    'Select u.usuario_id,usuario_nombre,usuario_apellido_paterno,usuario_correo,usuario_imagen, c.situacion_id from usuario u join curso_usuario c on u.usuario_id = c.usuario_id where c.curso_id = ?',
+    [idcurso]
+  );
+  // 'Select * from curso_usuario where curso_id = ?',
+
+  //Respuesta a la peticion
+  res.status(200).json({
+    message: 'Lista del curso: ' + idcurso,
+    data: listUser,
+  });
+  //Manejo de errror
+  //EMpezamos con el catch
 });
 
 module.exports = router;

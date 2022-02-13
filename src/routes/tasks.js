@@ -5,10 +5,11 @@ const router = express.Router();
 //Definicion del pool sql
 const pool = require('./../database');
 //Nos trae el metodo para hacer querys a la BD
-//Definicion de la ruta
-router.post('/creartarea', async (req, res, next) => {
-  //Esta es la ruta para crear una nueva tarea
 
+/**
+ * Esta es la ruta para crear una nueva tarea
+ */
+router.post('/', async (req, res, next) => {
   //Obtenemos los datos de la nueva tarea del cuerpo de la peticion
   const { curso_id, tarea_nombre, tarea_descripcion, tarea_fecha_entrega } =
     req.body;
@@ -24,28 +25,22 @@ router.post('/creartarea', async (req, res, next) => {
   try {
     //Aqui va el query para crear una nueva tarea
     const tareaCreated = await pool.query('INSERT INTO tarea set ? ', newTarea);
-    //Se llama al procedimiento
-    // await pool.query('CALL asignartareas(?, ?);', [
-    //   curso_id,
-    //   tareaCreated.insertId,
-    // ]);
+
     //Respuesta a la peticion
     res.status(200).json({
-      msg: 'tarea creada',
+      msg: 'Tarea creada',
       tarea: tareaCreated,
     });
-
-    //Manejo de errror
-    //EMpezamos con el catch
   } catch (err) {
     //Envio a middleware
     next(err);
   }
 });
 
-//Definicion de la ruta
-router.put('/editarTarea/:idTarea', async (req, res, next) => {
-  //MEtodo para editar tarea
+/**
+ * Método para editar tarea
+ */
+router.put('/:idTarea', async (req, res, next) => {
   const { idTarea } = req.params;
   //Obtenemos los datos del cuerpo de la peticion
   const {
@@ -81,81 +76,62 @@ router.put('/editarTarea/:idTarea', async (req, res, next) => {
     );
     //Envia los datos de la ediccion de como quedo al fronted
     res.status(200).json(TareaEditada);
-    //Manejo de errror
-    //EMpezamos con el catch
   } catch (err) {
     //Envio a middleware
     next(err);
   }
 });
 
-//Definicion de la ruta//Metodo para subir archivos
-router.post('/subirArchivo', async (req, res, next) => {
-  //Obrenemos los dartos del cuertpo de la petcion
-  const { archivo_id, origen_id, url, nombre_archivo, tipo } = req.body;
-  //Se crea un json para el nuevo archivo
-  console.log(req.body);
-  const newArchivo = {
-    archivo_id,
-    origen_id,
-    url,
-    nombre_archivo,
-    tipo,
-  };
-
-  //Empesamos con el try
-  try {
-    //Aqui va el query para crear una nueva tarea
-    await pool.query('INSERT INTO archivo set ? ', newArchivo);
-
-    //Respuesta a la peticion
-    res.status(200).json({
-      msg: 'Archivo subido',
-    });
-
-    //Manejo de errror
-    //EMpezamos con el catch
-  } catch (err) {
-    //Envio a middleware
-    next(err);
-  }
-});
-//Definicion de la ruta
-router.get('/mostrarArchivo/:id_archivo', async (req, res, next) => {
-  //Empesamos con el try
-  // Obtenemos el id de los archivos de los parametros de la ruta de la peticion
-  const { id_archivo } = req.params;
-
-  // Se accede a la BD para listar un solo Archivo
-  let list = await pool.query('SELECT * FROM archivo WHERE archivo_id = ?', [
-    id_archivo,
-  ]);
-  //Respuesta a la peticion
-  res.status(200).json({
-    list,
-  });
-  //Manejo de errror
-  //EMpezamos con el catch
-});
-
-//Definicion de la ruta
-router.get('/listarTareasCurso/:idcurso', async (req, res, next) => {
+/**
+ * Método para listar tareas por curso
+ */
+router.get('/:idcurso', async (req, res, next) => {
   const { idcurso } = req.params;
 
-  //Empesamos con el try
   //Aqui va el query para crear una nueva tarea
   const tareas = await pool.query('SELECT * FROM tarea WHERE curso_id = ? ', [
     idcurso,
   ]);
-  // console.log(tareas)
   //Respuesta a la peticion
-  res.status(200).json({
-    tareas,
-    msg: `Tareas del curso: ${idcurso} listadas`,
-  });
+  res.status(200).json(tareas);
+});
 
-  //Manejo de errror
-  //EMpezamos con el catch
+/**
+ * Listar entregas realizadas de las tareas
+ */
+router.get('/list/:idtarea', async (req, res, next) => {
+  // Obtenemos los datos de los parametros
+  const { idtarea } = req.params;
+  // Aqui va el query
+  const listaTareas = await pool.query(
+    'SELECT ta.tarea_id, ta.usuario_id, ta.tarea_asignada_url, ta.fecha_entrega, u.usuario_nombre, u.usuario_apellido_paterno FROM tarea_asignada ta INNER JOIN usuario u ON ta.usuario_id = u.usuario_id WHERE ta.tarea_id = ?',
+    [idtarea]
+  );
+  //Respuesta a la peticion
+  res.status(200).json(listaTareas);
+});
+
+/**
+ * Ruta para realizar la entrega de una tarea
+ */
+router.post('/entregar', async (req, res, next) => {
+  // Obtenemos los datos del cuerpo de la peticion
+  const { tarea_asignada_id, usuario_id, url } = req.body;
+  //Empesamos con el try
+  try {
+    // Aqui va el query
+    await pool.query(
+      'UPDATE tarea_asignada set ? WHERE usuario_id = ? AND tarea_asignada_id = ?',
+      [{ url }, usuario_id, tarea_asignada_id]
+    );
+    //Respuesta a la peticion
+    res.status(200).json({
+      msg: 'tarea entragasa',
+    });
+  } catch (err) {
+    //Envio a middleware
+    next(err);
+  }
 });
 
 //Exportacion del roiter
