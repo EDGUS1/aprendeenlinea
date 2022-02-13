@@ -6,6 +6,7 @@ const router = express.Router();
 const pool = require('./../database');
 //importamos el generador de codigo para cursos
 const CodeGenerator = require('node-code-generator');
+const { cacheInit } = require('../middleware/cache');
 //Instanciamos el generador
 const generator = new CodeGenerator();
 //Declaramos el patron
@@ -168,7 +169,7 @@ router.post('/code', async (req, res, next) => {
 /**
  * Ruta para obtener la lista de cursos publicos
  */
-router.get('/public', async (req, res, next) => {
+router.get('/public', cacheInit, async (req, res, next) => {
   // Query para obtener la lista de cursos publicos
   const cursos = await pool.query('SELECT * FROM curso');
   //Obtenemos la cantidad de cursos
@@ -182,7 +183,7 @@ router.get('/public', async (req, res, next) => {
 /**
  * Ruta para obtener la lista de cursos publicos
  */
-router.get('/publicmax', async (req, res, next) => {
+router.get('/publicmax', cacheInit, async (req, res, next) => {
   // Query para obtener la lista de cursos publicos
 
   let cursos = await pool.query(
@@ -195,7 +196,7 @@ router.get('/publicmax', async (req, res, next) => {
 /**
  * Ruta para obtener la lista de cursos publicos de un usuario
  */
-router.get('/public/:iduser', async (req, res, next) => {
+router.get('/public/:iduser', cacheInit, async (req, res, next) => {
   // Obtenemos el id del usuario de los parametros de la ruta de la peticion
   const { iduser } = req.params;
   // Query para obtener la lista de cursos publicos de un usuario
@@ -325,7 +326,7 @@ router.post('/join/:idcurso', async (req, res, next) => {
 /**
  * Esta es la ruta para obtener la informacion de un curso
  */
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', cacheInit, async (req, res, next) => {
   // Obtenemos el id del usuario de los parametros de la ruta de la peticion
   const { id } = req.params;
 

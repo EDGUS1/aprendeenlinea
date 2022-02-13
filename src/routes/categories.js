@@ -1,5 +1,6 @@
 //Framework de nodejs
 const express = require('express');
+const { cacheInit } = require('../middleware/cache');
 //Definicion del router
 const router = express.Router();
 //Definicion del pool sql
@@ -9,7 +10,7 @@ const pool = require('./../database');
 /**
  * Ruta para listar las categorias
  */
-router.get('/', async (req, res, next) => {
+router.get('/', cacheInit, async (req, res, next) => {
   // Aqui va el query para listar las categorias
   const categories = await pool.query('SELECT * FROM categoria');
 
@@ -20,7 +21,7 @@ router.get('/', async (req, res, next) => {
 /**
  * Ruta para listar las categorias
  */
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', cacheInit, async (req, res, next) => {
   const { id } = req.params;
   // Aqui va el query para listar las categorias
   const categories = await pool.query(

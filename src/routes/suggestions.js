@@ -5,11 +5,12 @@ const router = express.Router();
 //Definicion del pool sql
 const pool = require('./../database');
 //Nos trae el metodo para hacer querys a la BD
+const { cacheInit } = require('../middleware/cache');
 
 /**
  * Metodo GET para listar las sugerencias
  */
-router.get('/', async (req, res, next) => {
+router.get('/', cacheInit, async (req, res, next) => {
   // Se accede a la BD para listar todos los campos de las sugerencias
   let list = await pool.query('SELECT * FROM sugerencia');
   //Respuesta a la peticion
@@ -137,7 +138,7 @@ router.get('/vote', async (req, res, next) => {
 /**
  * Metodo para listar el numero votos de 3 sugerencias mas votadas
  */
-router.get('/max', async (req, res, next) => {
+router.get('/max', cacheInit, async (req, res, next) => {
   // Se accede a la BD para listar la sugerencias con su cantidad de votos
   let list = await pool.query(
     'SELECT *, (SELECT COUNT(sugerencia_id) FROM voto WHERE sugerencia_id = s.sugerencia_id GROUP BY sugerencia_id ORDER BY COUNT(sugerencia_id)) AS votos FROM sugerencia s order by votos DESC LIMIT 3; '
