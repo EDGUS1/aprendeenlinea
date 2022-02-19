@@ -175,7 +175,6 @@ router.get('/course/:idcurso', async (req, res, next) => {
   const { idcurso } = req.params;
   //Empesamos con el try
 
-  // TODO: Verificar cambio
   let listUser = await pool.query(
     'Select u.usuario_id,usuario_nombre,usuario_apellido_paterno,usuario_correo,usuario_imagen, c.situacion_id from usuario u join curso_usuario c on u.usuario_id = c.usuario_id where c.curso_id = ?',
     [idcurso]

@@ -89,7 +89,7 @@ router.post('/user', async (req, res, next) => {
 
     await pool.query(
       'INSERT INTO curso_usuario (curso_id,usuario_id,situacion_id) VALUES (?,?,?) ',
-      [curso_id, userDB[0].usuario_id, 1]
+      [curso_id, userDB[0].usuario_id, 4]
     );
 
     res.status(201).json({ msg: 'Alumno añadido', err: false });
@@ -171,10 +171,12 @@ router.post('/code', async (req, res, next) => {
  */
 router.get('/public', cacheInit, async (req, res, next) => {
   // Query para obtener la lista de cursos publicos
-  const cursos = await pool.query('SELECT * FROM curso');
+  const cursos = await pool.query(
+    'SELECT * FROM curso WHERE privacidad_id IN (1,3)'
+  );
   //Obtenemos la cantidad de cursos
   let cantCursos = await pool.query(
-    'SELECT count(curso_id) as total FROM curso'
+    'SELECT count(curso_id) as total FROM curso WHERE privacidad_id IN (1,3)'
   );
   // Respuesta a la peticion
   res.status(200).json({ cursos, total: cantCursos[0].total });

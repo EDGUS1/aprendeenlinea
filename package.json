@@ -9,9 +9,7 @@
     "start": "node src/index.js",
     "test": "cross-env NODE_ENV=test PORT=3002 jest --coverage --no-cache"
   },
-  "keywords": [
-    "cosmere"
-  ],
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
