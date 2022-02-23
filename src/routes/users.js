@@ -55,10 +55,13 @@ router.get('/:id', async (req, res, next) => {
       })
     );
 
-    let cantidadTotal = cantidadEstudiantes.map(can =>
-      can.length > 0 ? Object.values(can[0])[0] : 0
-    );
-    let suma = cantidadTotal.reduce((a, b) => a + b);
+    let suma = 0;
+    if (cantidadEstudiantes != '') {
+      let cantidadTotal = cantidadEstudiantes.map(can =>
+        can.length > 0 ? Object.values(can[0])[0] : 0
+      );
+      suma = cantidadTotal.reduce((a, b) => a + b);
+    }
 
     //Respuesta a la peticion
     res.status(200).json({

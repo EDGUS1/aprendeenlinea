@@ -138,7 +138,6 @@ router.post('/entregar', async (req, res, next) => {
       'INSERT INTO tarea_asignada(tarea_id, usuario_id) VALUES (?,?)',
       [tarea_id, usuario_id]
     );
-    console.log(response);
     //Respuesta a la peticion
     res.status(200).json({
       msg: 'tarea entragada',
