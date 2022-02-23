@@ -21,7 +21,7 @@ router.get('/user/:iduser', async (req, res, next) => {
 
   // Aqui va el query de buscar los cursos de un usuario
   const courses = await pool.query(
-    'SELECT * FROM curso WHERE usuario_id = ? UNION SELECT c.* FROM curso_usuario AS cu INNER JOIN curso AS c ON cu.curso_id = c.curso_id WHERE cu.usuario_id = ?',
+    'SELECT * FROM curso WHERE usuario_id = ? UNION SELECT c.* FROM curso_usuario AS cu INNER JOIN curso AS c ON cu.curso_id = c.curso_id WHERE cu.usuario_id = ? AND cu.situacion_id = 1',
     [iduser, iduser]
   );
   // Respuesta a la peticion

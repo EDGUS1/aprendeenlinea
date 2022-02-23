@@ -12,11 +12,11 @@ router.get('/solicitud/:usuario_id', async (req, res, next) => {
   const { usuario_id } = req.params;
   // Hacemos la consulta a base de datos mediante el pool pasando como parametros el objeto creado lineas arriba
   // Guardamos el resultado de otra consulta para mostrarlo como mensaje de salida
+
   const listaSolicitudes = await pool.query(
-    "SELECT curso_usuario.*, curso.curso_nombre, CONCAT(usuario.usuario_nombre, ' ', usuario.usuario_apellido_paterno) as usuario_nombre FROM curso INNER JOIN curso_usuario ON curso_usuario.curso_id = curso.curso_id INNER JOIN usuario on usuario.usuario_id = curso_usuario.usuario_id WHERE curso.usuario_id = ? AND curso_usuario.situacion_id = 3 UNION SELECT curso_usuario.*, curso.curso_nombre, CONCAT(usuario.usuario_nombre, ' ', usuario.usuario_apellido_paterno) as usuario_nombre FROM usuario INNER JOIN curso_usuario ON curso_usuario.usuario_id = usuario.usuario_id INNER JOIN curso on curso.curso_id = curso_usuario.curso_id WHERE curso_usuario.usuario_id = ? AND curso_usuario.situacion_id = 4",
+    "SELECT curso_usuario.*, curso.curso_nombre, CONCAT(usuario.usuario_nombre, ' ', usuario.usuario_apellido_paterno) as usuario_nombre FROM curso INNER JOIN curso_usuario ON curso_usuario.curso_id = curso.curso_id INNER JOIN usuario on usuario.usuario_id = curso_usuario.usuario_id WHERE curso.usuario_id = ? AND curso_usuario.situacion_id = 3 UNION SELECT curso_usuario.*, curso.curso_nombre, (SELECT CONCAT(us.usuario_nombre, ' ', us.usuario_apellido_paterno) FROM usuario us INNER JOIN curso cus on cus.usuario_id = us.usuario_id WHERE cus.curso_id = curso_usuario.curso_id) as usuario_nombre FROM usuario INNER JOIN curso_usuario ON curso_usuario.usuario_id = usuario.usuario_id INNER JOIN curso on curso.curso_id = curso_usuario.curso_id WHERE curso_usuario.usuario_id = ? AND curso_usuario.situacion_id = 4",
     [usuario_id, usuario_id]
   );
-  // AND curso_usuario.usuario_id != ?
   // Se muestra la respuesta exitosa a la consulta
   res.status(200).json(listaSolicitudes);
 });
