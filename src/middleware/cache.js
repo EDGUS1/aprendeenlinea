@@ -2,7 +2,7 @@ const getExpeditiousCache = require('express-expeditious');
 
 const cacheInit = getExpeditiousCache({
   namespace: 'expresscache',
-  defaultTtl: '15 minute',
+  defaultTtl: '5 minute',
 });
 
 module.exports = { cacheInit };

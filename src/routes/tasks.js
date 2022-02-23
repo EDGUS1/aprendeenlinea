@@ -43,28 +43,19 @@ router.post('/', async (req, res, next) => {
 router.put('/:idTarea', async (req, res, next) => {
   const { idTarea } = req.params;
   //Obtenemos los datos del cuerpo de la peticion
-  const {
-    curso_id,
-    nombre,
-    descripcion,
-    tarea_fecha_creacion,
-    tarea_fecha_entrega,
-    imagen,
-    enlace,
-  } = req.body;
+  const { curso_id, tarea_nombre, tarea_descripcion, tarea_fecha_entrega } =
+    req.body;
 
   //Empesamos con el try
   try {
     //guarda los datos de ediccion
     await pool.query(
-      'UPDATE tarea SET nombre = ?, descripcion = ?, tarea_fecha_creacion = ?, tarea_fecha_entrega = ?, imagen = ?, enlace = ? WHERE tarea_id = ? AND curso_id = ?',
+      'UPDATE tarea SET tarea_nombre = ?, tarea_descripcion = ?, tarea_fecha_entrega = ?,  tarea_fecha_modificaion = ? WHERE tarea_id = ? AND curso_id = ?',
       [
-        nombre,
-        descripcion,
-        tarea_fecha_creacion,
+        tarea_nombre,
+        tarea_descripcion,
         tarea_fecha_entrega,
-        imagen,
-        enlace,
+        new Date(Date.now()),
         idTarea,
         curso_id,
       ]
