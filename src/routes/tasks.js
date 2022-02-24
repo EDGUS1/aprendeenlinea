@@ -94,19 +94,12 @@ router.get('/list/:idtarea', async (req, res, next) => {
   // Obtenemos los datos de los parametros
   const { idtarea } = req.params;
   // Aqui va el query
-  /* const listaTareas = await pool.query(
-    'SELECT ta.tarea_id, ta.usuario_id,  ta.fecha_entrega, u.usuario_nombre, u.usuario_apellido_paterno FROM tarea_asignada ta INNER JOIN usuario u ON ta.usuario_id = u.usuario_id WHERE ta.tarea_id = ?',
-    [idtarea]
-  ); */
 
-  //TODO: MEJORAR SUBCONSULTA
   // query para listar solo quienes han entregado
   const listaTareas = await pool.query(
     'SELECT ta.tarea_id, ta.usuario_id, ta.fecha_entrega, u.usuario_nombre, u.usuario_apellido_paterno, (select a.archivo_url from archivo a where a.tipo_id = 3 and a.origen_id = ta.tarea_asignada_id) as arhivo_url, (select a.archivo_nombre from archivo a where a.tipo_id = 3 and a.origen_id = ta.tarea_asignada_id) as archivo_nombre FROM tarea_asignada ta INNER JOIN usuario u ON ta.usuario_id = u.usuario_id WHERE ta.tarea_id = ? ',
     [idtarea]
   );
-  /* 
-  SELECT ta.tarea_id, ta.usuario_id, ta.fecha_entrega, u.usuario_nombre, u.usuario_apellido_paterno, a.archivo_url, a.archivo_nombre FROM tarea_asignada ta INNER JOIN usuario u ON ta.usuario_id = u.usuario_id LEFT JOIN archivo a on ta.tarea_asignada_id = a.origen_id WHERE ta.tarea_id = ? AND a.tipo_id = 3 */
 
   //Respuesta a la peticion
   res.status(200).json(listaTareas);
@@ -121,10 +114,7 @@ router.post('/entregar', async (req, res, next) => {
   //Empesamos con el try
   try {
     // Aqui va el query
-    /* await pool.query(
-      'UPDATE tarea_asignada set ? WHERE usuario_id = ? AND tarea_asignada_id = ?',
-      [{ url }, usuario_id, tarea_asignada_id]
-    ); */
+
     const response = await pool.query(
       'INSERT INTO tarea_asignada(tarea_id, usuario_id) VALUES (?,?)',
       [tarea_id, usuario_id]

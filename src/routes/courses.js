@@ -80,7 +80,6 @@ router.post('/user', async (req, res, next) => {
   // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
   try {
     const { curso_id, correo } = req.body;
-    // TODO: Validaciones
 
     const userDB = await pool.query(
       'SELECT * FROM usuario WHERE usuario_correo = ?',
@@ -104,8 +103,6 @@ router.post('/user', async (req, res, next) => {
  */
 router.delete('/user', async (req, res, next) => {
   try {
-    // TODO: Validaciones
-
     // Obtenemos los datos del cuerpo ed la peticion
     const { curso_id, usuario_id } = req.body;
     // Creamos el query para traeros la informacion de la bd
@@ -137,7 +134,6 @@ router.post('/code', async (req, res, next) => {
   // Usamos un try-catch para capturar posibles errores al momento de mandar las consultas
   try {
     const { curso_codigo, usuario_id } = req.body;
-    // TODO: AGREGAR VALIDADIONES
 
     let mensaje = '';
 

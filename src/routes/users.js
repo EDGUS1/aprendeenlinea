@@ -176,21 +176,17 @@ router.post('/', async (req, res, next) => {
 router.get('/course/:idcurso', async (req, res, next) => {
   //Obtenemos el id del curso de los parametros de la ruta de la peticion
   const { idcurso } = req.params;
-  //Empesamos con el try
 
   let listUser = await pool.query(
     'Select u.usuario_id,usuario_nombre,usuario_apellido_paterno,usuario_correo,usuario_imagen, c.situacion_id from usuario u join curso_usuario c on u.usuario_id = c.usuario_id where c.curso_id = ?',
     [idcurso]
   );
-  // 'Select * from curso_usuario where curso_id = ?',
 
   //Respuesta a la peticion
   res.status(200).json({
     message: 'Lista del curso: ' + idcurso,
     data: listUser,
   });
-  //Manejo de errror
-  //EMpezamos con el catch
 });
 
 module.exports = router;
